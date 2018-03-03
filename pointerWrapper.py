@@ -1,21 +1,15 @@
 import tensorflow as tf
 
-START_ID=0
-PAD_ID=1
-END_ID=2
 global_sess = tf.Session()
 class PointerWrapper(tf.contrib.seq2seq.AttentionWrapper):
   """Customized AttentionWrapper for PointerNet."""
 
   def __init__(self,cell,attention_size,memory,initial_cell_state=None,name=None):
-    # In the paper, Bahdanau Attention Mechanism is used
-    # We want the scores rather than the probabilities of alignments
-    # Hence, we customize the probability_fn to return scores directly
+    #we are using BahdanauAttention as our attention mechanism
     attention_mechanism = tf.contrib.seq2seq.BahdanauAttention(attention_size, memory, probability_fn=lambda x: x )
-    # According to the paper, no need to concatenate the input and attention
-    # Therefore, we make cell_input_fn to return input only
+    #we don't need to concatenate input and attention vectors
     cell_input_fn=lambda input, attention: input
-    # Call super __init__
+    #call attention wrapper with the proper cell input function
     super(PointerWrapper, self).__init__(cell,
                                          attention_mechanism=attention_mechanism,
                                          attention_layer_size=None,
@@ -24,7 +18,6 @@ class PointerWrapper(tf.contrib.seq2seq.AttentionWrapper):
                                          output_attention=True,
                                          initial_cell_state=initial_cell_state,
                                          name=name)
-  @property
   def output_size(self):
     return self.state_size.alignments
 
@@ -34,13 +27,6 @@ class PointerWrapper(tf.contrib.seq2seq.AttentionWrapper):
  
 
 class PointerNet(object):
-  """ Pointer Net Model
-  
-  This class implements a multi-layer Pointer Network 
-  aimed to solve the Convex Hull problem. It is almost 
-  the same as the model described in this paper: 
-  https://arxiv.org/abs/1506.03134.
-  """
 
   def __init__(self, batch_size=128, num_features = 2, max_input_seqlen=5, max_output_seqlen=7, 
               LSTM_units=128, attention_size=128,learning_rate=0.001, max_gradient_norm=5):
@@ -134,20 +120,3 @@ class PointerNet(object):
 	loss = session.run(self.loss, feed_dict = feed_dict)
 	return (pred,loss)
 
-
-model = PointerNet()
-global_sess.run(tf.global_variables_initializer())
-inputs = [[0,1],[0,1],[0,1],[0,1],[0,1]]
-enc_input_weights = [1,2,3,4,5]
-dec_input_weights = [1,2,3,4,5,6,7]
-outputs = [1,2,3,4,5,6,7,8]
-final_enc_input_weights = []
-final_inputs = []
-final_dec_input_weights = []
-final_outputs = []
-for i in xrange(128):
-	final_inputs.append(inputs)
-	final_enc_input_weights.append(enc_input_weights)
-	final_dec_input_weights.append(dec_input_weights)
-	final_outputs.append(outputs)
-print(model.step(session = global_sess, inputs = final_inputs, enc_input_weights = final_enc_input_weights, dec_input_weights = final_dec_input_weights, outputs = final_outputs))
