@@ -2,8 +2,6 @@ import tensorflow as tf
 
 global_sess = tf.Session()
 class PointerWrapper(tf.contrib.seq2seq.AttentionWrapper):
-  """Customized AttentionWrapper for PointerNet."""
-
   def __init__(self,cell,attention_size,memory,initial_cell_state=None,name=None):
     #we are using BahdanauAttention as our attention mechanism
     attention_mechanism = tf.contrib.seq2seq.BahdanauAttention(attention_size, memory, probability_fn=lambda x: x )
