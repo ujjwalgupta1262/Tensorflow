@@ -84,9 +84,7 @@ class AttentionDecoder(Recurrent):
         # store the whole sequence so we can "attend" to it at each timestep
         self.x_seq = x
 
-        # apply the a dense layer over the time dimension of the sequence
-        # do it here because it doesn't depend on any previous steps
-        # thefore we can save computation time:
+      
         self._uxpb = _time_distributed_dense(self.x_seq, self.U_a, b=self.b_a,
                                              input_dim=self.input_dim,
                                              timesteps=self.timesteps,
@@ -99,9 +97,6 @@ class AttentionDecoder(Recurrent):
 
         # apply the matrix on the first time step to get the initial s0.
         s0 = activations.tanh(K.dot(inputs[:, 0], self.W_s))
-
-        # from keras.layers.recurrent to initialize a vector of (batchsize,
-        # output_dim)
         y0 = K.zeros_like(inputs)  # (samples, timesteps, input_dims)
         y0 = K.sum(y0, axis=(1, 2))  # (samples, )
         y0 = K.expand_dims(y0)  # (samples, 1)
